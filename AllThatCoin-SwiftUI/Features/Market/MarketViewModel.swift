@@ -1,27 +1,27 @@
 import Foundation
 import Combine
 
+struct MarketState {
+    var coins: [MarketCoinModel] = []
+    var isLoading = false
+    var error: Error?
+    var bookmarkedCoins: Set<String> = []
+}
+
 enum MarketAction {
     case loadCoins
     case refreshCoins
     case toggleBookmark(String)
 }
 
-struct MarketState {
-    var coins: [CoinModel] = []
-    var isLoading = false
-    var error: Error?
-    var bookmarkedCoins: Set<String> = []
-}
-
 class MarketViewModel: ObservableObject {
-    @Published private(set) var state = MarketState()
+    @Published private(set) var state: MarketState
     private let coinService: CoinServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
     init(coinService: CoinServiceProtocol = CoinService()) {
+        self.state = MarketState()
         self.coinService = coinService
-        loadBookmarkedCoins()
     }
     
     func dispatch(_ action: MarketAction) {
@@ -36,8 +36,6 @@ class MarketViewModel: ObservableObject {
     }
     
     private func loadCoins() {
-        guard !state.isLoading else { return }
-        
         state.isLoading = true
         state.error = nil
         
@@ -57,11 +55,6 @@ class MarketViewModel: ObservableObject {
     private func refreshCoins() {
         state.coins = []
         loadCoins()
-    }
-    
-    private func loadBookmarkedCoins() {
-        // TODO: Implement bookmark persistence
-        state.bookmarkedCoins = []
     }
     
     private func toggleBookmark(_ coinId: String) {

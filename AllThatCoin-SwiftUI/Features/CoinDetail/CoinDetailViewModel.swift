@@ -1,27 +1,28 @@
 import Foundation
 import Combine
 
-enum CoinDetailAction {
-    case loadCoinDetail
-    case toggleBookmark
-}
-
 struct CoinDetailState {
-    var coin: CoinModel?
+    var coin: MarketCoinModel?
     var isLoading = false
     var error: Error?
     var isBookmarked = false
 }
 
+enum CoinDetailAction {
+    case loadCoinDetail
+    case toggleBookmark
+}
+
 class CoinDetailViewModel: ObservableObject {
-    @Published private(set) var state = CoinDetailState()
+    @Published private(set) var state: CoinDetailState
+    private let coinId: String
     private let coinService: CoinServiceProtocol
     private var cancellables = Set<AnyCancellable>()
-    private let coinId: String
     
     init(coinId: String, coinService: CoinServiceProtocol = CoinService()) {
         self.coinId = coinId
         self.coinService = coinService
+        self.state = CoinDetailState()
     }
     
     func dispatch(_ action: CoinDetailAction) {
@@ -34,8 +35,6 @@ class CoinDetailViewModel: ObservableObject {
     }
     
     private func loadCoinDetail() {
-        guard !state.isLoading else { return }
-        
         state.isLoading = true
         state.error = nil
         
