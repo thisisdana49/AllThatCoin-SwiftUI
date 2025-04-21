@@ -11,18 +11,24 @@ struct CoinDetailState {
 enum CoinDetailAction {
     case loadCoinDetail
     case toggleBookmark
+    case loadBookmarkStatus
 }
 
 class CoinDetailViewModel: ObservableObject {
     @Published private(set) var state: CoinDetailState
     private let coinId: String
     private let coinService: CoinServiceProtocol
+    private let bookmarkService: BookmarkServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(coinId: String, coinService: CoinServiceProtocol = CoinService()) {
+    init(coinId: String, 
+         coinService: CoinServiceProtocol = CoinService(),
+         bookmarkService: BookmarkServiceProtocol = BookmarkService.shared) {
         self.coinId = coinId
         self.coinService = coinService
+        self.bookmarkService = bookmarkService
         self.state = CoinDetailState()
+        loadBookmarkStatus()
     }
     
     func dispatch(_ action: CoinDetailAction) {
@@ -31,6 +37,8 @@ class CoinDetailViewModel: ObservableObject {
             loadCoinDetail()
         case .toggleBookmark:
             toggleBookmark()
+        case .loadBookmarkStatus:
+            loadBookmarkStatus()
         }
     }
     
@@ -52,7 +60,11 @@ class CoinDetailViewModel: ObservableObject {
     }
     
     private func toggleBookmark() {
-        state.isBookmarked.toggle()
-        // TODO: Implement bookmark persistence
+        bookmarkService.toggleBookmark(for: coinId)
+        state.isBookmarked = bookmarkService.isBookmarked(coinId: coinId)
+    }
+    
+    private func loadBookmarkStatus() {
+        state.isBookmarked = bookmarkService.isBookmarked(coinId: coinId)
     }
 } 

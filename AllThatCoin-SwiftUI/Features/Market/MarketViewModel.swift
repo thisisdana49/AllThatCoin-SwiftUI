@@ -12,16 +12,21 @@ enum MarketAction {
     case loadCoins
     case refreshCoins
     case toggleBookmark(String)
+    case loadBookmarks
 }
 
 class MarketViewModel: ObservableObject {
     @Published private(set) var state: MarketState
     private let coinService: CoinServiceProtocol
+    private let bookmarkService: BookmarkServiceProtocol
     private var cancellables = Set<AnyCancellable>()
     
-    init(coinService: CoinServiceProtocol = CoinService()) {
+    init(coinService: CoinServiceProtocol = CoinService(),
+         bookmarkService: BookmarkServiceProtocol = BookmarkService.shared) {
         self.state = MarketState()
         self.coinService = coinService
+        self.bookmarkService = bookmarkService
+        loadBookmarks()
     }
     
     func dispatch(_ action: MarketAction) {
@@ -32,6 +37,8 @@ class MarketViewModel: ObservableObject {
             refreshCoins()
         case .toggleBookmark(let coinId):
             toggleBookmark(coinId)
+        case .loadBookmarks:
+            loadBookmarks()
         }
     }
     
@@ -58,11 +65,11 @@ class MarketViewModel: ObservableObject {
     }
     
     private func toggleBookmark(_ coinId: String) {
-        if state.bookmarkedCoins.contains(coinId) {
-            state.bookmarkedCoins.remove(coinId)
-        } else {
-            state.bookmarkedCoins.insert(coinId)
-        }
-        // TODO: Implement bookmark persistence
+        bookmarkService.toggleBookmark(for: coinId)
+        state.bookmarkedCoins = bookmarkService.getBookmarkedCoins()
+    }
+    
+    private func loadBookmarks() {
+        state.bookmarkedCoins = bookmarkService.getBookmarkedCoins()
     }
 } 
