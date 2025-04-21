@@ -39,9 +39,6 @@ struct SearchView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .onChange(of: searchText) { newValue in
-                    viewModel.dispatch(.updateSearchText(newValue))
-                }
                 .onSubmit {
                     viewModel.dispatch(.search(searchText))
                 }
@@ -79,19 +76,43 @@ struct SearchView: View {
     
     private var searchResultsList: some View {
         List(viewModel.state.searchResults) { coin in
-            NavigationLink(destination: CoinDetailView(coinId: coin.id)) {
-                CoinCardView(
-                    name: coin.name,
-                    symbol: coin.symbol.uppercased(),
-                    price: 0.0,
-                    changePercentage: 0.0,
-                    isBookmarked: viewModel.state.bookmarkedCoins.contains(coin.id)
-                ) {
-                    viewModel.dispatch(.toggleBookmark(coin.id))
+            HStack {
+                NavigationLink(destination: CoinDetailView(coinId: coin.id)) {
+                    CoinSearchResultRow(
+                        name: coin.name,
+                        symbol: coin.symbol.uppercased()
+                    )
                 }
+                
+                Spacer()
+                
+                // 북마크 버튼
+                Button {
+                    viewModel.dispatch(.toggleBookmark(coin.id))
+                } label: {
+                    Image(systemName: viewModel.state.bookmarkedCoins.contains(coin.id) ? "bookmark.fill" : "bookmark")
+                        .foregroundColor(viewModel.state.bookmarkedCoins.contains(coin.id) ? .blue : .gray)
+                }
+                .buttonStyle(PlainButtonStyle())
             }
         }
         .listStyle(.plain)
+    }
+}
+
+struct CoinSearchResultRow: View {
+    let name: String
+    let symbol: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(name)
+                .font(.headline)
+            Text(symbol)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
     }
 }
 

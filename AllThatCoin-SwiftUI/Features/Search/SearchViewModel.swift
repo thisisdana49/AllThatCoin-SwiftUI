@@ -19,13 +19,17 @@ enum SearchAction {
 class SearchViewModel: ObservableObject {
     @Published private(set) var state: SearchState
     private let coinService: CoinServiceProtocol
+    private let bookmarkService: BookmarkServiceProtocol
     private var searchCancellable: AnyCancellable?
     private var cancellables = Set<AnyCancellable>()
     
-    init(coinService: CoinServiceProtocol = CoinService()) {
+    init(coinService: CoinServiceProtocol = CoinService(),
+         bookmarkService: BookmarkServiceProtocol = BookmarkService.shared) {
         self.state = SearchState()
         self.coinService = coinService
+        self.bookmarkService = bookmarkService
         loadBookmarkedCoins()
+        setupBookmarkObserver()
     }
     
     func dispatch(_ action: SearchAction) {
@@ -43,7 +47,6 @@ class SearchViewModel: ObservableObject {
     
     private func updateSearchText(_ text: String) {
         state.searchText = text
-        // 자동 검색 제거
     }
     
     private func search(query: String) {
@@ -82,16 +85,20 @@ class SearchViewModel: ObservableObject {
     }
     
     private func loadBookmarkedCoins() {
-        // TODO: Implement bookmark persistence
-        state.bookmarkedCoins = []
+        state.bookmarkedCoins = bookmarkService.getBookmarkedCoins()
     }
     
     private func toggleBookmark(_ coinId: String) {
-        if state.bookmarkedCoins.contains(coinId) {
-            state.bookmarkedCoins.remove(coinId)
-        } else {
-            state.bookmarkedCoins.insert(coinId)
-        }
-        // TODO: Implement bookmark persistence
+        bookmarkService.toggleBookmark(for: coinId)
+        loadBookmarkedCoins()
+    }
+    
+    private func setupBookmarkObserver() {
+        NotificationCenter.default.publisher(for: .bookmarkDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadBookmarkedCoins()
+            }
+            .store(in: &cancellables)
     }
 } 

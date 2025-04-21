@@ -12,21 +12,9 @@ struct CoinDetailView: View {
             if viewModel.state.isLoading {
                 LoadingView(message: "Loading coin details...")
             } else if let error = viewModel.state.error {
-                VStack(spacing: 16) {
-                    ErrorView(
-                        message: error.localizedDescription,
-                        retryAction: {
-                            viewModel.dispatch(.loadCoinDetail)
-                        }
-                    )
-                    
-                    if case APIError.rateLimitExceeded = error {
-                        Text("Please wait a few seconds and try again.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
+                ErrorView(message: error.localizedDescription) {
+                    viewModel.dispatch(.loadCoinDetail)
                 }
-                .padding()
             } else if let coin = viewModel.state.coin {
                 ScrollView {
                     VStack(spacing: 20) {
@@ -59,42 +47,54 @@ struct CoinDetailView: View {
                                     .foregroundColor(viewModel.state.isBookmarked ? .blue : .gray)
                             }
                         }
-                        .padding()
+                        .padding(.horizontal)
                         
-                        // Price Section
-                        VStack(spacing: 8) {
-                            Text(String(format: "$%.2f", coin.currentPrice))
+                        // Price Info
+                        VStack(spacing: 4) {
+                            Text(coin.currentPrice.formatted(.currency(code: "USD")))
                                 .font(.title)
                                 .bold()
                             
-                            HStack {
-                                Image(systemName: coin.priceChangePercentage24h ?? 0 >= 0 ? "arrow.up.right" : "arrow.down.right")
-                                Text(String(format: "%.2f%%", abs(coin.priceChangePercentage24h ?? 0)))
+                            HStack(spacing: 4) {
+                                Image(systemName: (coin.priceChangePercentage24h ?? 0) >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                Text((coin.priceChangePercentage24h ?? 0).formatted(.percent.precision(.fractionLength(2))))
                             }
-                            .foregroundColor(coin.priceChangePercentage24h ?? 0 >= 0 ? .green : .red)
+                            .foregroundColor((coin.priceChangePercentage24h ?? 0) >= 0 ? .green : .red)
                         }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(12)
-                        .shadow(radius: 2)
                         
-                        // Market Stats
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Market Stats")
-                                .font(.headline)
-                            
-                            StatRow(title: "Market Cap", value: String(format: "$%.2f", coin.marketCap ?? 0))
-                            StatRow(title: "Market Cap Rank", value: "#\(coin.marketCapRank ?? 0)")
-                            StatRow(title: "24h Volume", value: String(format: "$%.2f", coin.totalVolume ?? 0))
-                            StatRow(title: "24h High", value: String(format: "$%.2f", coin.high24h ?? 0))
-                            StatRow(title: "24h Low", value: String(format: "$%.2f", coin.low24h ?? 0))
+                        // Chart
+                        if let sparklineData = coin.sparklineIn7D?.price {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("7 Day Chart")
+                                    .font(.headline)
+                                    .padding(.horizontal)
+                                
+                                SparklineChart(data: sparklineData)
+                                    .frame(height: 200)
+                                    .padding(.horizontal)
+                            }
                         }
-                        .padding()
-                        .background(Color(.systemBackground))
-                        .cornerRadius(12)
-                        .shadow(radius: 2)
+                        
+                        // Price Stats
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Price Statistics")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 12) {
+                                PriceStatRow(title: "고가", value: coin.high24h?.formatted(.currency(code: "USD")) ?? "N/A")
+                                PriceStatRow(title: "저가", value: coin.low24h?.formatted(.currency(code: "USD")) ?? "N/A")
+                                PriceStatRow(title: "신고점", value: coin.marketCap?.formatted(.currency(code: "USD")) ?? "N/A")
+                                PriceStatRow(title: "신저점", value: coin.totalVolume?.formatted(.currency(code: "USD")) ?? "N/A")
+                            }
+                            .padding()
+                            .background(Color(.systemBackground))
+                            .cornerRadius(12)
+                            .shadow(radius: 2)
+                            .padding(.horizontal)
+                        }
                     }
-                    .padding()
+                    .padding(.vertical)
                 }
             }
         }
@@ -105,7 +105,7 @@ struct CoinDetailView: View {
     }
 }
 
-struct StatRow: View {
+struct PriceStatRow: View {
     let title: String
     let value: String
     
@@ -116,6 +116,29 @@ struct StatRow: View {
             Spacer()
             Text(value)
                 .bold()
+        }
+    }
+}
+
+struct SparklineChart: View {
+    let data: [Double]
+    
+    var body: some View {
+        GeometryReader { geometry in
+            Path { path in
+                let points = data.enumerated().map { (index, value) in
+                    CGPoint(
+                        x: CGFloat(index) * (geometry.size.width / CGFloat(data.count - 1)),
+                        y: (CGFloat(value) - CGFloat(data.min() ?? 0)) / CGFloat((data.max() ?? 1) - (data.min() ?? 0)) * geometry.size.height
+                    )
+                }
+                
+                path.move(to: points[0])
+                for point in points.dropFirst() {
+                    path.addLine(to: point)
+                }
+            }
+            .stroke(Color.purple, lineWidth: 2)
         }
     }
 }
