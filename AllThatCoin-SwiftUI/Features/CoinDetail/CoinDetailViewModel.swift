@@ -48,6 +48,7 @@ class CoinDetailViewModel: ObservableObject {
     }
     
     private func loadCoinDetail() {
+        print("🔄 Loading coin detail for ID: \(coinId)")
         state.isLoading = true
         state.error = nil
         
@@ -56,9 +57,11 @@ class CoinDetailViewModel: ObservableObject {
             .sink { [weak self] completion in
                 self?.state.isLoading = false
                 if case .failure(let error) = completion {
+                    print("❌ Error loading coin detail: \(error)")
                     self?.state.error = error
                 }
             } receiveValue: { [weak self] coin in
+                print("✅ Received coin detail: \(coin.name)")
                 self?.state.coin = coin
             }
             .store(in: &cancellables)

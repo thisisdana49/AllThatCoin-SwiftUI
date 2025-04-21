@@ -12,9 +12,21 @@ struct CoinDetailView: View {
             if viewModel.state.isLoading {
                 LoadingView(message: "Loading coin details...")
             } else if let error = viewModel.state.error {
-                ErrorView(message: error.localizedDescription) {
-                    viewModel.dispatch(.loadCoinDetail)
+                VStack(spacing: 16) {
+                    ErrorView(
+                        message: error.localizedDescription,
+                        retryAction: {
+                            viewModel.dispatch(.loadCoinDetail)
+                        }
+                    )
+                    
+                    if case APIError.rateLimitExceeded = error {
+                        Text("Please wait a few seconds and try again.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
+                .padding()
             } else if let coin = viewModel.state.coin {
                 ScrollView {
                     VStack(spacing: 20) {
