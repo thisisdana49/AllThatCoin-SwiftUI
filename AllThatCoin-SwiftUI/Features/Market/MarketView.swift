@@ -5,41 +5,47 @@ struct MarketView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Trending Coins Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Trending Coins")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 16) {
-                                ForEach(viewModel.state.trendingCoins) { coin in
-                                    TrendingCoinCard(coin: coin.item)
+            ZStack {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Trending Coins Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Trending Coins")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                LazyHStack(spacing: 16) {
+                                    ForEach(viewModel.state.trendingCoins) { coin in
+                                        TrendingCoinCard(coin: coin.item)
+                                    }
                                 }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
+                        }
+                        
+                        // Trending NFTs Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Trending NFTs")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                LazyHStack(spacing: 16) {
+                                    ForEach(viewModel.state.trendingNFTs) { nft in
+                                        TrendingNFTCard(nft: nft)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
                         }
                     }
-                    
-                    // Trending NFTs Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Trending NFTs")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            LazyHStack(spacing: 16) {
-                                ForEach(viewModel.state.trendingNFTs) { nft in
-                                    TrendingNFTCard(nft: nft)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
+                
+                if viewModel.state.isLoading {
+                    LoadingView(message: "Loading market data...")
+                }
             }
             .navigationTitle("Market")
             .onAppear {
