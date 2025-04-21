@@ -32,4 +32,10 @@ class CoinService: CoinServiceProtocol {
         print("Searching coins with endpoint: \(endpoint)")
         return apiClient.fetch(endpoint)
     }
-} 
+    
+    func fetchTrending() -> AnyPublisher<TrendingResponse, Error> {
+        let endpoint = "/search/trending"
+        print("Fetching trending coins and NFTs with endpoint: \(endpoint)")
+        return apiClient.fetch(endpoint)
+    }
+}

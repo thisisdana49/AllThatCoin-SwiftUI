@@ -5,53 +5,113 @@ struct MarketView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                if viewModel.state.isLoading && viewModel.state.coins.isEmpty {
-                    LoadingView(message: "Loading coins...")
-                } else if let error = viewModel.state.error {
-                    ErrorView(message: error.localizedDescription) {
-                        viewModel.dispatch(.refreshCoins)
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Trending Coins Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Trending Coins")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 16) {
+                                ForEach(viewModel.state.trendingCoins) { coin in
+                                    TrendingCoinCard(coin: coin.item)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
-                } else {
-                    coinList
+                    
+                    // Trending NFTs Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Trending NFTs")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            LazyHStack(spacing: 16) {
+                                ForEach(viewModel.state.trendingNFTs) { nft in
+                                    TrendingNFTCard(nft: nft)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
                 }
+                .padding(.vertical)
             }
             .navigationTitle("Market")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        viewModel.dispatch(.refreshCoins)
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
+            .onAppear {
+                viewModel.dispatch(.loadTrending)
             }
-        }
-        .onAppear {
-            viewModel.dispatch(.loadCoins)
         }
     }
+}
+
+struct TrendingCoinCard: View {
+    let coin: TrendingCoinItem
     
-    private var coinList: some View {
-        List(viewModel.state.coins) { coin in
-            NavigationLink(destination: CoinDetailView(coinId: coin.id)) {
-                CoinCardView(
-                    name: coin.name,
-                    symbol: coin.symbol.uppercased(),
-                    price: coin.currentPrice,
-                    changePercentage: coin.priceChangePercentage24h ?? 0,
-                    isBookmarked: viewModel.state.bookmarkedCoins.contains(coin.id)
-                ) {
-                    viewModel.dispatch(.toggleBookmark(coin.id))
-                }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AsyncImage(url: URL(string: coin.thumb)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                Color.gray.opacity(0.2)
+            }
+            .frame(width: 40, height: 40)
+            .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(coin.symbol.uppercased())
+                    .font(.headline)
+                Text(coin.name)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Text("#\(coin.marketCapRank)")
+                    .font(.caption)
+                    .foregroundColor(.blue)
             }
         }
-        .refreshable {
-            viewModel.dispatch(.refreshCoins)
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 2)
+    }
+}
+
+struct TrendingNFTCard: View {
+    let nft: TrendingNFT
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AsyncImage(url: URL(string: nft.thumb)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                Color.gray.opacity(0.2)
+            }
+            .frame(width: 40, height: 40)
+            .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(nft.name)
+                    .font(.headline)
+                Text(nft.symbol)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
         }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(radius: 2)
     }
 }
 
 #Preview {
     MarketView()
-} 
+}

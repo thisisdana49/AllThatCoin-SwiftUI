@@ -7,6 +7,10 @@ protocol BookmarkServiceProtocol {
     func isBookmarked(coinId: String) -> Bool
 }
 
+extension Notification.Name {
+    static let bookmarkChanged = Notification.Name("bookmarkChanged")
+}
+
 class BookmarkService: BookmarkServiceProtocol {
     static let shared = BookmarkService()
     private let defaults = UserDefaults.standard
@@ -27,6 +31,13 @@ class BookmarkService: BookmarkServiceProtocol {
             bookmarks.insert(coinId)
         }
         defaults.set(Array(bookmarks), forKey: bookmarkKey)
+        
+        // 북마크 상태 변경 알림
+        NotificationCenter.default.post(
+            name: .bookmarkChanged,
+            object: nil,
+            userInfo: ["coinId": coinId, "isBookmarked": bookmarks.contains(coinId)]
+        )
     }
     
     func isBookmarked(coinId: String) -> Bool {

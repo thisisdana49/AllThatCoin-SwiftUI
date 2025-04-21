@@ -29,6 +29,11 @@ class CoinDetailViewModel: ObservableObject {
         self.bookmarkService = bookmarkService
         self.state = CoinDetailState()
         loadBookmarkStatus()
+        setupBookmarkObserver()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     func dispatch(_ action: CoinDetailAction) {
@@ -61,10 +66,31 @@ class CoinDetailViewModel: ObservableObject {
     
     private func toggleBookmark() {
         bookmarkService.toggleBookmark(for: coinId)
-        state.isBookmarked = bookmarkService.isBookmarked(coinId: coinId)
     }
     
     private func loadBookmarkStatus() {
         state.isBookmarked = bookmarkService.isBookmarked(coinId: coinId)
+    }
+    
+    private func setupBookmarkObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleBookmarkChanged),
+            name: .bookmarkChanged,
+            object: nil
+        )
+    }
+    
+    @objc private func handleBookmarkChanged(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let changedCoinId = userInfo["coinId"] as? String,
+              let isBookmarked = userInfo["isBookmarked"] as? Bool,
+              changedCoinId == coinId else {
+            return
+        }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.state.isBookmarked = isBookmarked
+        }
     }
 } 

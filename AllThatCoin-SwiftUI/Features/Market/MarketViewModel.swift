@@ -3,6 +3,8 @@ import Combine
 
 struct MarketState {
     var coins: [MarketCoinModel] = []
+    var trendingCoins: [TrendingCoin] = []
+    var trendingNFTs: [TrendingNFT] = []
     var isLoading = false
     var error: Error?
     var bookmarkedCoins: Set<String> = []
@@ -13,6 +15,7 @@ enum MarketAction {
     case refreshCoins
     case toggleBookmark(String)
     case loadBookmarks
+    case loadTrending
 }
 
 class MarketViewModel: ObservableObject {
@@ -39,6 +42,8 @@ class MarketViewModel: ObservableObject {
             toggleBookmark(coinId)
         case .loadBookmarks:
             loadBookmarks()
+        case .loadTrending:
+            loadTrending()
         }
     }
     
@@ -71,5 +76,23 @@ class MarketViewModel: ObservableObject {
     
     private func loadBookmarks() {
         state.bookmarkedCoins = bookmarkService.getBookmarkedCoins()
+    }
+    
+    private func loadTrending() {
+        state.isLoading = true
+        state.error = nil
+        
+        coinService.fetchTrending()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.state.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.state.error = error
+                }
+            } receiveValue: { [weak self] response in
+                self?.state.trendingCoins = response.coins
+                self?.state.trendingNFTs = response.nfts
+            }
+            .store(in: &cancellables)
     }
 } 
