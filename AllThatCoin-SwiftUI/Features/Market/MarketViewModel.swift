@@ -79,6 +79,7 @@ class MarketViewModel: ObservableObject {
     }
     
     private func loadTrending() {
+        print("🔄 Starting to load trending data...")
         state.isLoading = true
         state.error = nil
         
@@ -87,9 +88,11 @@ class MarketViewModel: ObservableObject {
             .sink { [weak self] completion in
                 self?.state.isLoading = false
                 if case .failure(let error) = completion {
+                    print("❌ Error loading trending data: \(error)")
                     self?.state.error = error
                 }
             } receiveValue: { [weak self] response in
+                print("✅ Received trending data - Coins: \(response.coins.count), NFTs: \(response.nfts.count)")
                 self?.state.trendingCoins = response.coins
                 self?.state.trendingNFTs = response.nfts
             }

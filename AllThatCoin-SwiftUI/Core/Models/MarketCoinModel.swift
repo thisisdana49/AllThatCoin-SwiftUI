@@ -78,7 +78,7 @@ struct TrendingCoinData: Codable {
     let totalVolume: String
     let totalVolumeBtc: String
     let sparkline: String
-    let content: CoinContent
+    let content: CoinContent?
     
     enum CodingKeys: String, CodingKey {
         case price
@@ -136,7 +136,7 @@ struct NFTData: Codable {
     let h24Volume: String
     let h24AverageSalePrice: String
     let sparkline: String
-    let content: NFTContent
+    let content: NFTContent?
     
     enum CodingKeys: String, CodingKey {
         case floorPrice = "floor_price"
