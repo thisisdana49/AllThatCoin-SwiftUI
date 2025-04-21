@@ -43,7 +43,10 @@ struct MyFavoriteSection: View {
                 LazyHStack(spacing: 12) {
                     ForEach(bookmarkedCoins.sorted(), id: \.self) { coinId in
                         if let coin = coins.first(where: { $0.id == coinId }) {
-                            FavoriteCoinCard(coin: coin)
+                            NavigationLink(destination: CoinDetailView(coinId: coin.id)) {
+                                FavoriteCoinCard(coin: coin)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                 }
@@ -62,20 +65,41 @@ struct TopCoinsSection: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            VStack(spacing: 12) {
-                ForEach(Array(coins.prefix(15).enumerated()), id: \.element.id) { index, coin in
-                    RankedItemCell(
-                        rank: index + 1,
-                        imageUrl: coin.image,
-                        name: coin.name,
-                        symbol: coin.symbol.uppercased(),
-                        price: coin.currentPrice.formatted(.currency(code: "USD")),
-                        priceChangePercentage: coin.priceChangePercentage24h ?? 0
-                    )
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach(0..<5) { groupIndex in
+                        VStack(spacing: 12) {
+                            ForEach(0..<3) { itemIndex in
+                                let index = groupIndex * 3 + itemIndex
+                                if index < min(coins.count, 15) {
+                                    RankedCoinLink(rank: index + 1, coin: coins[index])
+                                }
+                            }
+                        }
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
+    }
+}
+
+struct RankedCoinLink: View {
+    let rank: Int
+    let coin: MarketCoinModel
+    
+    var body: some View {
+        NavigationLink(destination: CoinDetailView(coinId: coin.id)) {
+            RankedItemCell(
+                rank: rank,
+                imageUrl: coin.image,
+                name: coin.name,
+                symbol: coin.symbol.uppercased(),
+                price: coin.currentPrice.formatted(.currency(code: "USD")),
+                priceChangePercentage: coin.priceChangePercentage24h ?? 0
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -88,19 +112,28 @@ struct TopNFTsSection: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            VStack(spacing: 12) {
-                ForEach(Array(nfts.prefix(7).enumerated()), id: \.element.id) { index, nft in
-                    RankedItemCell(
-                        rank: index + 1,
-                        imageUrl: nft.thumb,
-                        name: nft.name,
-                        symbol: nft.symbol,
-                        price: "1.70 ETH",
-                        priceChangePercentage: 0
-                    )
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach(0..<3) { groupIndex in
+                        VStack(spacing: 12) {
+                            ForEach(0..<3) { itemIndex in
+                                let index = groupIndex * 3 + itemIndex
+                                if index < min(nfts.count, 7) {
+                                    RankedItemCell(
+                                        rank: index + 1,
+                                        imageUrl: nfts[index].thumb,
+                                        name: nfts[index].name,
+                                        symbol: nfts[index].symbol,
+                                        price: "1.70 ETH",
+                                        priceChangePercentage: 0
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 }
