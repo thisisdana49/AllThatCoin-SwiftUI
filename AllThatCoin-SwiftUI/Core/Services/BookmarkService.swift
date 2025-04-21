@@ -1,14 +1,15 @@
 import Foundation
 import Combine
 
+extension Notification.Name {
+    static let bookmarkDidChange = Notification.Name("bookmarkDidChange")
+    static let bookmarkChanged = Notification.Name("bookmarkChanged")
+}
+
 protocol BookmarkServiceProtocol {
     func getBookmarkedCoins() -> Set<String>
     func toggleBookmark(for coinId: String)
     func isBookmarked(coinId: String) -> Bool
-}
-
-extension Notification.Name {
-    static let bookmarkChanged = Notification.Name("bookmarkChanged")
 }
 
 class BookmarkService: BookmarkServiceProtocol {
@@ -32,12 +33,8 @@ class BookmarkService: BookmarkServiceProtocol {
         }
         defaults.set(Array(bookmarks), forKey: bookmarkKey)
         
-        // 북마크 상태 변경 알림
-        NotificationCenter.default.post(
-            name: .bookmarkChanged,
-            object: nil,
-            userInfo: ["coinId": coinId, "isBookmarked": bookmarks.contains(coinId)]
-        )
+        // 북마크 변경 알림 발송
+        NotificationCenter.default.post(name: .bookmarkDidChange, object: nil)
     }
     
     func isBookmarked(coinId: String) -> Bool {

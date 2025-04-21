@@ -13,9 +13,8 @@ struct MarketState {
 enum MarketAction {
     case loadCoins
     case refreshCoins
-    case toggleBookmark(String)
-    case loadBookmarks
     case loadTrending
+    case updateBookmarks
 }
 
 class MarketViewModel: ObservableObject {
@@ -29,6 +28,15 @@ class MarketViewModel: ObservableObject {
         self.state = MarketState()
         self.coinService = coinService
         self.bookmarkService = bookmarkService
+        
+        // 북마크 서비스의 변경사항을 구독
+        NotificationCenter.default.publisher(for: .bookmarkDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.dispatch(.updateBookmarks)
+            }
+            .store(in: &cancellables)
+        
         loadBookmarks()
     }
     
@@ -38,12 +46,10 @@ class MarketViewModel: ObservableObject {
             loadCoins()
         case .refreshCoins:
             refreshCoins()
-        case .toggleBookmark(let coinId):
-            toggleBookmark(coinId)
-        case .loadBookmarks:
-            loadBookmarks()
         case .loadTrending:
             loadTrending()
+        case .updateBookmarks:
+            loadBookmarks()
         }
     }
     
@@ -67,11 +73,6 @@ class MarketViewModel: ObservableObject {
     private func refreshCoins() {
         state.coins = []
         loadCoins()
-    }
-    
-    private func toggleBookmark(_ coinId: String) {
-        bookmarkService.toggleBookmark(for: coinId)
-        state.bookmarkedCoins = bookmarkService.getBookmarkedCoins()
     }
     
     private func loadBookmarks() {

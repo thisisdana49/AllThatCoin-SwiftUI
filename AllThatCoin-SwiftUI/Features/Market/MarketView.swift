@@ -12,7 +12,7 @@ struct MarketView: View {
                         TopCoinsSection(coins: viewModel.state.coins)
                         TopNFTsSection(nfts: viewModel.state.trendingNFTs)
                     }
-                    .padding(.vertical)
+                    .padding(.vertical, 24)
                 }
                 
                 if viewModel.state.isLoading {
@@ -38,6 +38,7 @@ struct MyFavoriteSection: View {
             Text("My Favorite")
                 .font(.title2)
                 .fontWeight(.bold)
+                .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 12) {
@@ -51,6 +52,7 @@ struct MyFavoriteSection: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.vertical, 8)
             }
         }
     }
@@ -64,6 +66,7 @@ struct TopCoinsSection: View {
             Text("Top15 Coin")
                 .font(.title2)
                 .fontWeight(.bold)
+                .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 16) {
@@ -79,6 +82,7 @@ struct TopCoinsSection: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.vertical, 8)
             }
         }
     }
@@ -111,6 +115,7 @@ struct TopNFTsSection: View {
             Text("Top7 NFT")
                 .font(.title2)
                 .fontWeight(.bold)
+                .padding(.horizontal)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 16) {
@@ -133,6 +138,7 @@ struct TopNFTsSection: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.vertical, 8)
             }
         }
     }
