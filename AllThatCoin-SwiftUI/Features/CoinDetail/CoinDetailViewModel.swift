@@ -69,6 +69,7 @@ class CoinDetailViewModel: ObservableObject {
     
     private func toggleBookmark() {
         bookmarkService.toggleBookmark(for: coinId)
+        loadBookmarkStatus() // 즉시 상태 업데이트
     }
     
     private func loadBookmarkStatus() {
@@ -76,24 +77,11 @@ class CoinDetailViewModel: ObservableObject {
     }
     
     private func setupBookmarkObserver() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleBookmarkChanged),
-            name: .bookmarkChanged,
-            object: nil
-        )
-    }
-    
-    @objc private func handleBookmarkChanged(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let changedCoinId = userInfo["coinId"] as? String,
-              let isBookmarked = userInfo["isBookmarked"] as? Bool,
-              changedCoinId == coinId else {
-            return
-        }
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.state.isBookmarked = isBookmarked
-        }
+        NotificationCenter.default.publisher(for: .bookmarkDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.loadBookmarkStatus()
+            }
+            .store(in: &cancellables)
     }
 } 
